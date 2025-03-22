@@ -11,4 +11,12 @@ public class Weapon : MonoBehaviour
     public int clipAmmo;
     public ParticleSystem impactParticle;
 
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            collision.transform.GetComponent<PlayerMovement>().PickupWeapon(this);
+        }
+    }
 }

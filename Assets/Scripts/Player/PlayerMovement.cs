@@ -25,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
     public Weapon weapon;
     public int maxAmmo = 12;
     public int ammo = 0;
+    public Transform weaponSlot;
 
 
 
@@ -37,6 +38,8 @@ public class PlayerMovement : MonoBehaviour
         cameraTrans = Camera.main.transform;
     }
 
+
+    //-------------------- Cyclical Functions --------------------
     void Move()
     {
         float x = Input.GetAxis("Horizontal");
@@ -68,6 +71,7 @@ public class PlayerMovement : MonoBehaviour
         {
             return;
         }
+
         if (Input.GetKeyDown(KeyCode.Mouse0) && ammo > 0)
         {
 
@@ -117,18 +121,49 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
         }
-        
+    }
+
+    void UpdateUI()
+    {
+        // Update the UI with the players health and ammo
     }
 
     // Update is called once per frame
     void Update()
     {
         Move();
-        Jump();
         Shoot();
         Reload();
-
+        Jump();
+        UpdateUI();
     }
-    
-    
+
+
+
+    //-------------------- Pickup Functions --------------------
+    public void PickupAmmo(int ammoAmount)
+    {
+        ammo += ammoAmount;
+        if (ammo > maxAmmo)
+        {
+            ammo = maxAmmo;
+        }
+    }
+
+    public void PickupHealth(float healthAmount)
+    {
+        health += healthAmount;
+        if (health > maxHealth)
+        {
+            health = maxHealth;
+        }
+    }
+
+    public void PickupWeapon(Weapon newWeapon)
+    {
+        weapon = newWeapon;
+        weapon.transform.SetParent(weaponSlot);
+    }
+
+
 }
