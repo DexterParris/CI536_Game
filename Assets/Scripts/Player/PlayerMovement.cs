@@ -38,6 +38,16 @@ public class PlayerMovement : MonoBehaviour
         cameraTrans = Camera.main.transform;
     }
 
+    // Update is called once per frame
+    void Update()
+    {
+        Move();
+        Shoot();
+        Reload();
+        Jump();
+        UpdateUI();
+    }
+
 
     //-------------------- Cyclical Functions --------------------
     void Move()
@@ -128,15 +138,7 @@ public class PlayerMovement : MonoBehaviour
         // Update the UI with the players health and ammo
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        Move();
-        Shoot();
-        Reload();
-        Jump();
-        UpdateUI();
-    }
+    
 
 
 
