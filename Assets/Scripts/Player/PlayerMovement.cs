@@ -19,6 +19,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Variables")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
+    private float cameraPitch = 0f;
+
 
     // Weapon Variables
     [Header("Weapon Variables")]
@@ -35,15 +37,19 @@ public class PlayerMovement : MonoBehaviour
         // Set initial values
         ammo = maxAmmo;
         cameraTrans = Camera.main.transform;
+
+        //lock the cursor
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     // Update is called once per frame
     void Update()
     {
         Move();
+        Jump();
         Shoot();
         Reload();
-        Jump();
         UpdateUI();
     }
 
@@ -56,8 +62,24 @@ public class PlayerMovement : MonoBehaviour
         
         // Calculate movement
         Vector3 move = transform.right * x + transform.forward * z;
-        
-        transform.position += move * moveSpeed * Time.deltaTime;
+        rb.AddForce(move * moveSpeed, ForceMode.VelocityChange);
+
+        // Cap the players speed to stop them from flying away
+        if (rb.velocity.magnitude > moveSpeed)
+        {
+            rb.velocity = rb.velocity.normalized * moveSpeed;
+        }
+
+
+        float yRot = Input.GetAxis("Mouse X") * cameraSensitivity;
+        float xRot = Input.GetAxis("Mouse Y") * cameraSensitivity;
+
+        cameraPitch -= xRot;
+        cameraPitch = Mathf.Clamp(cameraPitch, -90f, 90f);
+
+        cameraTrans.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
+        transform.Rotate(Vector3.up * yRot);
+
     }
 
     void Jump()
@@ -65,7 +87,7 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             RaycastHit hit;
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 1.1f))
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 0.8f))
             {
                 rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             }
