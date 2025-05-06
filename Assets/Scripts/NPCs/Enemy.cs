@@ -30,22 +30,58 @@ public class Enemy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        ChasePC();
+        Move();
+    }
+
+    void ChasePC()
+    {
+        if (target != null)
+        {
+            float distance = Vector3.Distance(transform.position, target.position);
+            if (distance < chaseRange && distance > stopRange)
+            {
+                Move();
+            }
+            else if (distance <= stopRange)
+            {
+                // Attack the player
+                Attack();
+            }
+        }
     }
 
     void Move()
     {
-
+        if (target != null)
+        {
+            Vector3 direction = target.position - transform.position;
+            direction.Normalize();
+            rb.MovePosition(transform.position + direction * moveSpeed * Time.deltaTime);
+        }
     }
 
+    void Attack()
+    {
+        if (attackCooldown <= 0f)
+        {
+            // Implement attack logic here
+            Debug.Log("Attacking player for " + damage + " damage!");
+            attackCooldown = attackCooldownTime;
+        }
+        else
+        {
+            attackCooldown -= Time.deltaTime;
+        }
+    }
 
-        void Die()
+    void Die()
     {
         deathParticles = Instantiate(deathParticles, transform.position, Quaternion.identity);
         Destroy(gameObject);

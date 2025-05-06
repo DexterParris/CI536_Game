@@ -1,6 +1,3 @@
-using JetBrains.Annotations;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -19,8 +16,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Variables")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
+    private float currentMoveSpeed = 5f;
     private float cameraPitch = 0f;
-
+    private bool jumpQueued = false;
 
     // Weapon Variables
     [Header("Weapon Variables")]
@@ -37,40 +35,69 @@ public class PlayerMovement : MonoBehaviour
         // Set initial values
         ammo = maxAmmo;
         cameraTrans = Camera.main.transform;
+        
 
         //lock the cursor
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
+        UnityEngine.Cursor.visible = false;
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        Move();
         Jump();
+
         Shoot();
         Reload();
         UpdateUI();
+    }
+
+    private void LateUpdate()
+    {
+        Look();
+        Move();
+
+    }
+
+    private void FixedUpdate()
+    {
     }
 
 
     //-------------------- Cyclical Functions --------------------
     void Move()
     {
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-        
-        // Calculate movement
-        Vector3 move = transform.right * x + transform.forward * z;
-        rb.AddForce(move * moveSpeed, ForceMode.VelocityChange);
-
-        // Cap the players speed to stop them from flying away
-        if (rb.velocity.magnitude > moveSpeed)
+        if(Input.GetKey(KeyCode.LeftShift))
         {
-            rb.velocity = rb.velocity.normalized * moveSpeed;
+            currentMoveSpeed = moveSpeed * 1.7f;
+        }
+        else
+        {
+            currentMoveSpeed = moveSpeed;
         }
 
+        // Calculate movement
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
 
+        Vector3 move = transform.right * x + transform.forward * z;
+
+        // Cap the movement speed
+        Vector3 velocity = move * currentMoveSpeed;
+        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
+
+        // Roll the camera based on the players velocity to give a more "dynamic" feel :)
+        Vector3 localVelocity = cameraTrans.InverseTransformDirection(rb.velocity);
+        float roll = localVelocity.x * -0.4f;
+        cameraTrans.localRotation *= Quaternion.Euler(0f, 0f, roll);
+
+
+
+    }
+
+    void Look()
+    {
         float yRot = Input.GetAxis("Mouse X") * cameraSensitivity;
         float xRot = Input.GetAxis("Mouse Y") * cameraSensitivity;
 
@@ -80,16 +107,35 @@ public class PlayerMovement : MonoBehaviour
         cameraTrans.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
         transform.Rotate(Vector3.up * yRot);
 
+        
     }
 
     void Jump()
     {
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            RaycastHit hit;
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 0.8f))
+            RaycastHit jumpCheck;
+            Physics.Raycast(transform.position + Vector3.up * 0.02f, Vector3.down, out jumpCheck, 10f);
+            //draw this ray
+            Debug.DrawRay(transform.position + Vector3.up * 0.02f, Vector3.down * 1f, Color.red, 1f);
+
+            print(jumpCheck.distance);
+            if (jumpCheck.distance < 0.45f)
             {
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                jumpQueued = true;
+            }
+        }
+
+        RaycastHit groundCheck;
+        if (Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, out groundCheck, 0.3f) && jumpQueued)
+        {
+            if (groundCheck.distance -0.2f < 0.01f)
+            {
+                rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
+                jumpQueued = false;
+                return;
             }
         }
     }
