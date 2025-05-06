@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -230,6 +231,7 @@ public class PlayerMovement : MonoBehaviour
     void PlayShootAnim()
     {
         weaponAnim.Play("Shoot");
+        GameObject weaponBullet = Instantiate(weapon.bulletModel, weapon.firingPoint);
     }
 
     void PlayShootBlankAnim()

@@ -56,6 +56,8 @@ MonoBehaviour:
   impactParticle: {fileID: 31960188982976625, guid: 4ed6fc15f64785446b64b6ea1cf0ef2f,
     type: 3}
   firingPoint: {fileID: 6162249333684837731}
+  bulletModel: {fileID: 45432162866604295, guid: d27c3e3cc6ac9d5489ceda68ea6b871b,
+    type: 3}
 --- !u!54 &261151764382708028
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -14,6 +14,7 @@ public class Weapon : MonoBehaviour
     public ParticleSystem impactParticle;
     public Transform firingPoint;
     private bool isPickedUp = false;
+    public GameObject bulletModel;
     
     
 
