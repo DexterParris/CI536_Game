@@ -11,7 +11,8 @@ public class Enemy : MonoBehaviour
     public float damage = 10f;
     public float attackRate = 1f;
     public float attackRange = 2f;
-    ParticleSystem deathParticles;
+    public ParticleSystem deathParticles;
+    public ParticleSystem impactParticle;
 
     // Movement Variables
     [Header("Movement Variables")]
@@ -83,8 +84,13 @@ public class Enemy : MonoBehaviour
 
     void Die()
     {
-        deathParticles = Instantiate(deathParticles, transform.position, Quaternion.identity);
-        Destroy(gameObject);
+        deathParticles = Instantiate(deathParticles, transform.position + Vector3.down * 0.5f, Quaternion.identity);
+
+        //replace with death animation
+        rb.freezeRotation = false;
+        rb.AddForce(Vector3.forward*50f);
+        //Destroy(gameObject);
+        //replace with death animation
     }
 
     public void DamageReciever(float damage)

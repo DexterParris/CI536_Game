@@ -26,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     public int maxAmmo = 12;
     public int ammo = 0;
     public Transform weaponSlot;
+    private Animator weaponAnim;
 
     
 
@@ -35,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
         // Set initial values
         ammo = maxAmmo;
         cameraTrans = Camera.main.transform;
+        weaponAnim = weaponSlot.GetComponent<Animator>();
         
 
         //lock the cursor
@@ -47,7 +49,6 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         Jump();
-
         Shoot();
         Reload();
         UpdateUI();
@@ -87,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 velocity = move * currentMoveSpeed;
         rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
 
-        // Roll the camera based on the players velocity to give a more "dynamic" feel :)
+        // Roll the camera 
         Vector3 localVelocity = cameraTrans.InverseTransformDirection(rb.velocity);
         float roll = localVelocity.x * -0.4f;
         cameraTrans.localRotation *= Quaternion.Euler(0f, 0f, roll);
@@ -106,7 +107,6 @@ public class PlayerMovement : MonoBehaviour
 
         cameraTrans.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
         transform.Rotate(Vector3.up * yRot);
-
         
     }
 
@@ -117,10 +117,7 @@ public class PlayerMovement : MonoBehaviour
         {
             RaycastHit jumpCheck;
             Physics.Raycast(transform.position + Vector3.up * 0.02f, Vector3.down, out jumpCheck, 10f);
-            //draw this ray
-            Debug.DrawRay(transform.position + Vector3.up * 0.02f, Vector3.down * 1f, Color.red, 1f);
 
-            print(jumpCheck.distance);
             if (jumpCheck.distance < 0.45f)
             {
                 jumpQueued = true;
@@ -144,27 +141,41 @@ public class PlayerMovement : MonoBehaviour
 
     void Shoot()
     {
-        if(weapon == null)
-        {
-            return;
-        }
 
         if (Input.GetKeyDown(KeyCode.Mouse0) && ammo > 0)
         {
-
-            RaycastHit hit;
-            if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 1000))
+            if(weapon == null)
             {
-                if (hit.transform.CompareTag("Enemy"))
-                {
-                    hit.transform.GetComponent<Enemy>().DamageReciever(weapon.bulletDamage);
-                }
-                else
-                {
-                    //Instantiate spark effect facing the player
-                    ParticleSystem impactParticle = Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
-                }
+                return;
             }
+
+            if (weapon.clipAmmo > 0)
+            {
+                weapon.clipAmmo -= 1;
+                PlayShootAnim();
+                RaycastHit hit;
+                if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 1000))
+                {
+                    if (hit.transform.CompareTag("Enemy"))
+                    {
+                        Enemy enemyScript = hit.transform.GetComponent<Enemy>();
+                        enemyScript.DamageReciever(weapon.bulletDamage);
+                        
+                        ParticleSystem enemyImpactParticle = Instantiate(enemyScript.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                    }
+                    else
+                    {
+                        //Instantiate spark effect from the surface hit
+                        ParticleSystem impactParticle = Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                    }
+                }   
+            }
+            else
+            {
+                PlayShootBlankAnim();
+            }
+            
+            
 
         }
     }
@@ -176,15 +187,16 @@ public class PlayerMovement : MonoBehaviour
             if(weapon.clipAmmo == weapon.maxClipAmmo)
             {
                 print("Your clip is already full");
-                return;
+                
             }
             else
             {
+                int ammoNeeded = weapon.maxClipAmmo - weapon.clipAmmo;
                 // Fill the weapons ammo up to the max ammo for the weapon and take it from the players ammo
                 if (ammo > weapon.maxClipAmmo)
                 {
                     weapon.clipAmmo = weapon.maxClipAmmo;
-                    ammo -= weapon.maxClipAmmo;
+                    ammo -= ammoNeeded;
                 }
                 else if (ammo <= 0)
                 {
@@ -196,6 +208,8 @@ public class PlayerMovement : MonoBehaviour
                     weapon.clipAmmo = ammo;
                     ammo = 0;
                 }
+                PlayReloadAnim();
+
             }
         }
     }
@@ -206,7 +220,27 @@ public class PlayerMovement : MonoBehaviour
     }
 
     
+    //-------------------- Animation Functions ----------------
+    
+    void PlayReloadAnim()
+    {
+        weaponAnim.Play("Reload");
+    }
+    
+    void PlayShootAnim()
+    {
+        weaponAnim.Play("Shoot");
+    }
 
+    void PlayShootBlankAnim()
+    {
+        weaponAnim.Play("ShootBlank");
+    }
+
+    void PlayPickupAnim()
+    {
+        weaponAnim.Play("PickUp");
+    }
 
 
     //-------------------- Pickup Functions --------------------
@@ -230,8 +264,10 @@ public class PlayerMovement : MonoBehaviour
 
     public void PickupWeapon(Weapon newWeapon)
     {
+        if (weapon) Destroy(weapon);
         weapon = newWeapon;
         weapon.transform.SetParent(weaponSlot);
+        PlayPickupAnim();
     }
 
 

@@ -605,7 +605,7 @@ ParticleSystem:
         m_RotationOrder: 4
     randomizeRotationDirection: 0
     gravitySource: 0
-    maxNumParticles: 50
+    maxNumParticles: 150
     customEmitterVelocity: {x: 0, y: 0, z: 0}
     size3D: 0
     rotation3D: 0
@@ -871,7 +871,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 70
+      scalar: 200
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -3991,9 +3991,9 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    minVertexDistance: 0.2
+    minVertexDistance: 0.1
     textureMode: 0
-    textureScale: {x: 0.2, y: 0.2}
+    textureScale: {x: 1, y: 1}
     ribbonCount: 1
     shadowBias: 0.5
     worldSpace: 0
@@ -4072,7 +4072,7 @@ ParticleSystem:
     widthOverTrail:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.3
+      scalar: 2
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -8880,7 +8880,7 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    minVertexDistance: 0.2
+    minVertexDistance: 10
     textureMode: 0
     textureScale: {x: 1, y: 1}
     ribbonCount: 1
