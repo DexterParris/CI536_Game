@@ -85,6 +85,7 @@ public class Enemy : MonoBehaviour
     void Die()
     {
         deathParticles = Instantiate(deathParticles, transform.position + Vector3.down * 0.5f, Quaternion.identity);
+        deathParticles.transform.parent = transform.parent;
 
         //replace with death animation
         rb.freezeRotation = false;

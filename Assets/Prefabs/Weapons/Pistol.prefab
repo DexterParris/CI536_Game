@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponType: Pistol
-  bulletDamage: 2
+  bulletDamage: 3
   fireRate: 4
   maxClipAmmo: 12
   clipAmmo: 12

@@ -7,10 +7,10 @@ public class PlayerMovement : MonoBehaviour
     [Header("Player Variables")]
     public float health = 100f;
     public float maxHealth = 100f;
-    public Rigidbody rb;
+    public CharacterController characterController;
 
     // Camera Variables
-    Transform cameraTrans;
+    public Transform cameraTrans;
     public float cameraSensitivity = 1f;
 
     // Movement Variables
@@ -19,7 +19,17 @@ public class PlayerMovement : MonoBehaviour
     public float jumpForce = 5f;
     private float currentMoveSpeed = 5f;
     private float cameraPitch = 0f;
+    private float yRot = 0f;
     private bool jumpQueued = false;
+    private float jumpQueueTime = 0.2f;
+    private float jumpQueueTimer = 0f;
+    private float bHopMaxBoost = 3f;
+    private float bHopBoost = 0f;
+    private float bHopTimer = 0f;
+
+    // Gravity
+    private float gravity = -9.81f;
+    private Vector3 velocity;
 
     // Weapon Variables
     [Header("Weapon Variables")]
@@ -31,278 +41,203 @@ public class PlayerMovement : MonoBehaviour
     private Animator weaponAnim;
     private Animator legAnim;
 
-    
-
-    // Start is called before the first frame update
     void Start()
     {
-        // Set initial values
         ammo = maxAmmo;
-        cameraTrans = Camera.main.transform;
         weaponAnim = weaponSlot.GetComponent<Animator>();
         legAnim = legObject.GetComponent<Animator>();
-
-        //lock the cursor
-        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-        UnityEngine.Cursor.visible = false;
-
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        Jump();
+        HandleJumpInput();
         Shoot();
         Kick();
         Reload();
         UpdateUI();
-    }
-
-    private void LateUpdate()
-    {
-        Look();
         Move();
     }
 
-    private void FixedUpdate()
+    void LateUpdate()
     {
+        Look();
     }
 
-
-    //-------------------- Cyclical Functions --------------------
+    //-------------------- Movement --------------------
     void Move()
     {
-        if(Input.GetKey(KeyCode.LeftShift))
-        {
-            currentMoveSpeed = moveSpeed * 1.7f;
-        }
+        if (Input.GetKey(KeyCode.LeftShift))
+            currentMoveSpeed = moveSpeed * 1.3f + bHopBoost;
         else
-        {
-            currentMoveSpeed = moveSpeed;
-        }
+            currentMoveSpeed = moveSpeed + bHopBoost;
 
-        // Calculate movement
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
         Vector3 move = transform.right * x + transform.forward * z;
 
-        // Cap the movement speed
-        Vector3 velocity = move * currentMoveSpeed;
-        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
+        // Do gravity stuff
+        if (characterController.isGrounded)
+        {
+            if (jumpQueued)
+            {
+                velocity.y = jumpForce;
+                jumpQueued = false;
+            }
+        }
+        else
+        {
+            velocity.y += gravity * Time.deltaTime;
+        }
 
-        // Roll the camera 
-        Vector3 localVelocity = cameraTrans.InverseTransformDirection(rb.velocity);
-        float roll = localVelocity.x * -0.4f;
-        cameraTrans.localRotation *= Quaternion.Euler(0f, 0f, roll);
+        Vector3 fullMove = (move * currentMoveSpeed) + new Vector3(0, velocity.y, 0);
+        characterController.Move(fullMove * Time.deltaTime);
 
-
-
+        // Reset jump queue if it expires
+        if (jumpQueued)
+        {
+            jumpQueueTimer -= Time.deltaTime;
+            if (jumpQueueTimer <= 0f)
+                jumpQueued = false;
+        }
     }
 
+    void HandleJumpInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpQueued = true;
+            jumpQueueTimer = jumpQueueTime;
+        }
+    }
+
+    //-------------------- Camera --------------------
     void Look()
     {
-        float yRot = Input.GetAxis("Mouse X") * cameraSensitivity;
-        float xRot = Input.GetAxis("Mouse Y") * cameraSensitivity;
+        yRot = Input.GetAxis("Mouse X") * Time.deltaTime * cameraSensitivity;
+        float xRot = Input.GetAxis("Mouse Y") * Time.deltaTime * cameraSensitivity;
 
         cameraPitch -= xRot;
         cameraPitch = Mathf.Clamp(cameraPitch, -90f, 90f);
 
-        cameraTrans.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
+        float targetRoll = 0f;
+        if (Input.GetKey(KeyCode.A)) targetRoll = 2f;
+        else if (Input.GetKey(KeyCode.D)) targetRoll = -2f;
+
+        float currentRoll = cameraTrans.localRotation.eulerAngles.z;
+        if (currentRoll > 180f) currentRoll -= 360f;
+        float smoothRoll = Mathf.Lerp(currentRoll, targetRoll, Time.deltaTime * 10f);
+
+        cameraTrans.localRotation = Quaternion.Euler(cameraPitch, 0f, smoothRoll);
         transform.Rotate(Vector3.up * yRot);
-        
     }
 
-    void Jump()
-    {
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            RaycastHit jumpCheck;
-            Physics.Raycast(transform.position + Vector3.up * 0.02f, Vector3.down, out jumpCheck, 10f);
-
-            if (jumpCheck.distance < 0.45f)
-            {
-                jumpQueued = true;
-            }
-        }
-
-        RaycastHit groundCheck;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, out groundCheck, 0.3f) && jumpQueued)
-        {
-            if (groundCheck.distance -0.2f < 0.01f)
-            {
-                rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
-                jumpQueued = false;
-                return;
-            }
-        }
-    }
-
-
-
+    //-------------------- Combat --------------------
     void Shoot()
     {
-
         if (Input.GetKeyDown(KeyCode.Mouse0) && ammo > 0)
         {
-            if(weapon == null)
-            {
-                return;
-            }
-
+            if (weapon == null) return;
             if (weapon.clipAmmo > 0)
             {
-                weapon.clipAmmo -= 1;
+                weapon.clipAmmo--;
                 PlayShootAnim();
                 RaycastHit hit;
                 if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 1000))
                 {
                     if (hit.transform.CompareTag("Enemy"))
                     {
-                        Enemy enemyScript = hit.transform.GetComponent<Enemy>();
-                        enemyScript.DamageReciever(weapon.bulletDamage);
-                        
-                        ParticleSystem enemyImpactParticle = Instantiate(enemyScript.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage);
+                        Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
                     }
                     else
                     {
-                        //Instantiate spark effect from the surface hit
-                        ParticleSystem impactParticle = Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                        Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
                     }
                 }
 
                 GameObject bullet = Instantiate(weapon.bulletModel, weapon.firingPoint.position, Quaternion.LookRotation(hit.point - weapon.firingPoint.position));
                 bullet.transform.localRotation = Quaternion.Euler(0, 90, 0);
-
             }
             else
             {
                 PlayShootBlankAnim();
             }
-            
-            
-
         }
     }
 
     void Reload()
     {
-        if(Input.GetKeyDown(KeyCode.R))
-        {
-            if(weapon.clipAmmo == weapon.maxClipAmmo)
-            {
-                print("Your clip is already full");
-                
-            }
-            else
-            {
-                int ammoNeeded = weapon.maxClipAmmo - weapon.clipAmmo;
-                // Fill the weapons ammo up to the max ammo for the weapon and take it from the players ammo
-                if (ammo > weapon.maxClipAmmo)
-                {
-                    weapon.clipAmmo = weapon.maxClipAmmo;
-                    ammo -= ammoNeeded;
-                }
-                else if (ammo <= 0)
-                {
-                    print("You don't have enough ammo to reload");
-                    return;
-                }
-                else
-                {
-                    weapon.clipAmmo = ammo;
-                    ammo = 0;
-                }
-                PlayReloadAnim();
+        if (!Input.GetKeyDown(KeyCode.R) || weapon == null) return;
 
-            }
+        if (weapon.clipAmmo == weapon.maxClipAmmo) return;
+
+        int needed = weapon.maxClipAmmo - weapon.clipAmmo;
+
+        if (ammo <= 0) return;
+
+        if (ammo >= needed)
+        {
+            weapon.clipAmmo = weapon.maxClipAmmo;
+            ammo -= needed;
         }
+        else
+        {
+            weapon.clipAmmo += ammo;
+            ammo = 0;
+        }
+
+        PlayReloadAnim();
     }
 
     void Kick()
     {
-        if(Input.GetKeyDown(KeyCode.Q))
-        {
-            // Play kick animation
+        if (Input.GetKeyDown(KeyCode.Q))
             PlayKickAnim();
-        }
-        
     }
 
     public void KickDamage()
     {
-        //raycast from the camera if it hits an enemy or a door then trigger a kicked effect
-        RaycastHit hit;
-        if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 2f))
+        if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out RaycastHit hit, 2f))
         {
             if (hit.transform.CompareTag("Enemy"))
             {
-                Enemy enemyScript = hit.transform.GetComponent<Enemy>();
-                enemyScript.KickReciever();
-                ParticleSystem enemyImpactParticle = Instantiate(enemyScript.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                hit.transform.GetComponent<Enemy>()?.KickReciever();
+                Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
             }
             else if (hit.transform.CompareTag("Door"))
             {
-                // Trigger door kick animation
                 PlayPickupAnim();
+            }
+
+            Rigidbody rb = hit.transform.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                Vector3 dir = (hit.transform.position - transform.position).normalized;
+                rb.AddForce(dir * 50f, ForceMode.Impulse);
             }
         }
     }
 
-    void UpdateUI()
+    //-------------------- UI & Pickups --------------------
+    void UpdateUI() { }
+
+    void PlayReloadAnim() => weaponAnim.Play("Reload");
+    void PlayShootAnim() => weaponAnim.Play("Shoot");
+    void PlayShootBlankAnim() => weaponAnim.Play("ShootBlank");
+    void PlayPickupAnim() => weaponAnim.Play("PickUp");
+    void PlayKickAnim() => legAnim.Play("Kick");
+
+    public void PickupAmmo(int amount)
     {
-        // Update the UI with the players health and ammo
+        ammo = Mathf.Min(ammo + amount, maxAmmo);
     }
 
-    
-    //-------------------- Animation Functions ----------------
-    
-    void PlayReloadAnim()
+    public void PickupHealth(float amount)
     {
-        weaponAnim.Play("Reload");
-    }
-    
-    void PlayShootAnim()
-    {
-        weaponAnim.Play("Shoot");
-
-    }
-
-    void PlayShootBlankAnim()
-    {
-        weaponAnim.Play("ShootBlank");
-    }
-
-    void PlayPickupAnim()
-    {
-        weaponAnim.Play("PickUp");
-    }
-
-    void PlayKickAnim()
-    {
-        legAnim.Play("Kick");
-    }
-
-
-    //-------------------- Pickup Functions --------------------
-    public void PickupAmmo(int ammoAmount)
-    {
-        ammo += ammoAmount;
-        if (ammo > maxAmmo)
-        {
-            ammo = maxAmmo;
-        }
-    }
-
-    public void PickupHealth(float healthAmount)
-    {
-        health += healthAmount;
-        if (health > maxHealth)
-        {
-            health = maxHealth;
-        }
+        health = Mathf.Min(health + amount, maxHealth);
     }
 
     public void PickupWeapon(Weapon newWeapon)
@@ -312,6 +247,4 @@ public class PlayerMovement : MonoBehaviour
         weapon.transform.SetParent(weaponSlot);
         PlayPickupAnim();
     }
-
-
 }
