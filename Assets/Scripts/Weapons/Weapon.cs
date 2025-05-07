@@ -22,7 +22,7 @@ public class Weapon : MonoBehaviour
     {
         if (!isPickedUp)
         {
-            transform.Rotate(Vector3.up * 1.5f);
+            transform.Rotate(Vector3.up * 100 * Time.deltaTime);
         }
     }
 

@@ -27,7 +27,9 @@ public class PlayerMovement : MonoBehaviour
     public int maxAmmo = 12;
     public int ammo = 0;
     public Transform weaponSlot;
+    public Transform legObject;
     private Animator weaponAnim;
+    private Animator legAnim;
 
     
 
@@ -38,7 +40,7 @@ public class PlayerMovement : MonoBehaviour
         ammo = maxAmmo;
         cameraTrans = Camera.main.transform;
         weaponAnim = weaponSlot.GetComponent<Animator>();
-        
+        legAnim = legObject.GetComponent<Animator>();
 
         //lock the cursor
         UnityEngine.Cursor.lockState = CursorLockMode.Locked;
@@ -51,6 +53,7 @@ public class PlayerMovement : MonoBehaviour
     {
         Jump();
         Shoot();
+        Kick();
         Reload();
         UpdateUI();
     }
@@ -59,7 +62,6 @@ public class PlayerMovement : MonoBehaviour
     {
         Look();
         Move();
-
     }
 
     private void FixedUpdate()
@@ -169,7 +171,11 @@ public class PlayerMovement : MonoBehaviour
                         //Instantiate spark effect from the surface hit
                         ParticleSystem impactParticle = Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
                     }
-                }   
+                }
+
+                GameObject bullet = Instantiate(weapon.bulletModel, weapon.firingPoint.position, Quaternion.LookRotation(hit.point - weapon.firingPoint.position));
+                bullet.transform.localRotation = Quaternion.Euler(0, 90, 0);
+
             }
             else
             {
@@ -215,6 +221,36 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void Kick()
+    {
+        if(Input.GetKeyDown(KeyCode.Q))
+        {
+            // Play kick animation
+            PlayKickAnim();
+        }
+        
+    }
+
+    public void KickDamage()
+    {
+        //raycast from the camera if it hits an enemy or a door then trigger a kicked effect
+        RaycastHit hit;
+        if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 2f))
+        {
+            if (hit.transform.CompareTag("Enemy"))
+            {
+                Enemy enemyScript = hit.transform.GetComponent<Enemy>();
+                enemyScript.KickReciever();
+                ParticleSystem enemyImpactParticle = Instantiate(enemyScript.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+            }
+            else if (hit.transform.CompareTag("Door"))
+            {
+                // Trigger door kick animation
+                PlayPickupAnim();
+            }
+        }
+    }
+
     void UpdateUI()
     {
         // Update the UI with the players health and ammo
@@ -231,7 +267,7 @@ public class PlayerMovement : MonoBehaviour
     void PlayShootAnim()
     {
         weaponAnim.Play("Shoot");
-        GameObject weaponBullet = Instantiate(weapon.bulletModel, weapon.firingPoint);
+
     }
 
     void PlayShootBlankAnim()
@@ -242,6 +278,11 @@ public class PlayerMovement : MonoBehaviour
     void PlayPickupAnim()
     {
         weaponAnim.Play("PickUp");
+    }
+
+    void PlayKickAnim()
+    {
+        legAnim.Play("Kick");
     }
 
 

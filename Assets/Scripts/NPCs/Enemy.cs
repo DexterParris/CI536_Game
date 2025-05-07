@@ -89,7 +89,7 @@ public class Enemy : MonoBehaviour
         //replace with death animation
         rb.freezeRotation = false;
         rb.AddForce(Vector3.forward*50f);
-        //Destroy(gameObject);
+        Destroy(gameObject, 2f);
         //replace with death animation
     }
 
@@ -100,5 +100,11 @@ public class Enemy : MonoBehaviour
         {
             Die();
         }
+    }
+
+    public void KickReciever()
+    {
+        DamageReciever(10f);
+        rb.freezeRotation = false;
     }
 }
