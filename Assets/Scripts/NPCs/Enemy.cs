@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
@@ -11,13 +11,18 @@ public class Enemy : MonoBehaviour
     public float damage = 10f;
     public float attackRate = 1f;
     public float attackRange = 2f;
-    public ParticleSystem deathParticles;
+    public GameObject deathParticles;
     public ParticleSystem impactParticle;
-
+    private GameObject particles;
+    private Transform playerPos;
+    private PlayerMovement player;
+    
     // Movement Variables
     [Header("Movement Variables")]
     public Rigidbody rb;
     public float moveSpeed = 5f;
+    public NavMeshAgent agent;
+    private float navUpdateTimer = 0f;    
 
 
     // Enemy AI Variables
@@ -31,49 +36,56 @@ public class Enemy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        player = GameObject.FindWithTag("Player").GetComponentInChildren<PlayerMovement>();
+        target = player.transform;
+        agent = GetComponent<NavMeshAgent>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        ChasePC();
-        Move();
+        UpdateParticles();
     }
+
+    private void FixedUpdate()
+    {
+        ChasePC();
+    }
+
+    void UpdateParticles()
+    {
+        if (particles != null)
+        {
+            playerPos = player.transform;
+            particles.transform.LookAt(playerPos);
+        }
+    }
+    
 
     void ChasePC()
     {
-        if (target != null)
+        if (health > 0 || agent != null)
         {
-            float distance = Vector3.Distance(transform.position, target.position);
-            if (distance < chaseRange && distance > stopRange)
+            if (navUpdateTimer <= 0)
             {
-                Move();
+                agent.destination = target.position;
+                navUpdateTimer = 3f;
             }
-            else if (distance <= stopRange)
+            else
             {
-                // Attack the player
-                Attack();
-            }
+                navUpdateTimer -= Time.deltaTime;
+            }    
         }
+        
     }
-
-    void Move()
-    {
-        if (target != null)
-        {
-            Vector3 direction = target.position - transform.position;
-            direction.Normalize();
-            rb.MovePosition(transform.position + direction * moveSpeed * Time.deltaTime);
-        }
-    }
+    
 
     void Attack()
     {
         if (attackCooldown <= 0f)
         {
-            // Implement attack logic here
-            Debug.Log("Attacking player for " + damage + " damage!");
+            //Debug.Log("Attacking player for " + damage + " damage!");
+            player.DamageReciever(damage);
             attackCooldown = attackCooldownTime;
         }
         else
@@ -82,30 +94,35 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    void Die()
+    void Die(Transform hitPosition)
     {
-        deathParticles = Instantiate(deathParticles, transform.position + Vector3.down * 0.5f, Quaternion.identity);
-        deathParticles.transform.parent = transform.parent;
-
+        particles = Instantiate(deathParticles, transform.position + Vector3.down * 0.5f, Quaternion.identity);
+        particles.transform.parent = gameObject.transform;
+        particles.transform.localPosition = Vector3.zero;
+        
+        Destroy(GetComponent<NavMeshAgent>());
         //replace with death animation
         rb.freezeRotation = false;
+        rb.constraints = RigidbodyConstraints.None;
+        rb.isKinematic = false;
+        rb.useGravity = true;
         rb.AddForce(Vector3.forward*50f);
         Destroy(gameObject, 2f);
         //replace with death animation
     }
 
-    public void DamageReciever(float damage)
+    public void DamageReciever(float damage, Transform hitPosition)
     {
         health -= damage;
         if (health <= 0)
         {
-            Die();
+            Die(hitPosition);
         }
     }
 
-    public void KickReciever()
+    public void KickReciever(Transform hitPosition)
     {
-        DamageReciever(10f);
+        DamageReciever(10f, hitPosition);
         rb.freezeRotation = false;
     }
 }

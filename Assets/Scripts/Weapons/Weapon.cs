@@ -22,22 +22,22 @@ public class Weapon : MonoBehaviour
     {
         if (!isPickedUp)
         {
-            transform.Rotate(Vector3.up * 100 * Time.deltaTime);
+            transform.Rotate(Vector3.up * Time.deltaTime * 100);
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
             isPickedUp = true;
-            collision.transform.GetComponent<PlayerMovement>().PickupWeapon(this);
             Destroy(GetComponent<Rigidbody>());
             Destroy(GetComponent<SphereCollider>());
+            other.transform.GetComponent<PlayerMovement>().PickupWeapon(this);
             transform.localPosition = new Vector3(0, 0, 0);
             transform.localRotation = Quaternion.identity;
         }
     }
-
     
 }

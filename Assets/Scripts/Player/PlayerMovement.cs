@@ -23,9 +23,9 @@ public class PlayerMovement : MonoBehaviour
     private bool jumpQueued = false;
     private float jumpQueueTime = 0.2f;
     private float jumpQueueTimer = 0f;
-    private float bHopMaxBoost = 3f;
-    private float bHopBoost = 0f;
-    private float bHopTimer = 0f;
+    [SerializeField] private float bHopMaxBoost = 5f;
+    [SerializeField] private float bHopBoost = 0f;
+    [SerializeField] private float bHopTimer = 0f;
 
     // Gravity
     private float gravity = -9.81f;
@@ -58,16 +58,19 @@ public class PlayerMovement : MonoBehaviour
         Reload();
         UpdateUI();
         Move();
+        Look();
+
     }
 
     void LateUpdate()
     {
-        Look();
     }
 
     //-------------------- Movement --------------------
     void Move()
     {
+        bHopTimer -= Time.deltaTime;
+        bHopTimer = Mathf.Clamp(bHopTimer, 0, 2f);
         if (Input.GetKey(KeyCode.LeftShift))
             currentMoveSpeed = moveSpeed * 1.3f + bHopBoost;
         else
@@ -85,11 +88,19 @@ public class PlayerMovement : MonoBehaviour
             {
                 velocity.y = jumpForce;
                 jumpQueued = false;
+                bHopBoost += 1f;
+                bHopBoost = Mathf.Clamp(bHopBoost, 0, bHopMaxBoost);
+                bHopTimer = 1f;
+            }
+            else
+            {
+                if (bHopTimer <= 0) bHopBoost = 0;
             }
         }
         else
         {
             velocity.y += gravity * Time.deltaTime;
+
         }
 
         Vector3 fullMove = (move * currentMoveSpeed) + new Vector3(0, velocity.y, 0);
@@ -149,7 +160,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     if (hit.transform.CompareTag("Enemy"))
                     {
-                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage);
+                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage, hit.transform);
                         Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
                     }
                     else
@@ -204,7 +215,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (hit.transform.CompareTag("Enemy"))
             {
-                hit.transform.GetComponent<Enemy>()?.KickReciever();
+                hit.transform.GetComponent<Enemy>()?.KickReciever(hit.transform);
                 Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
             }
             else if (hit.transform.CompareTag("Door"))
@@ -216,10 +227,25 @@ public class PlayerMovement : MonoBehaviour
             if (rb != null)
             {
                 Vector3 dir = (hit.transform.position - transform.position).normalized;
-                rb.AddForce(dir * 50f, ForceMode.Impulse);
+                rb.AddForce(dir * 5000f *Time.deltaTime, ForceMode.Impulse);
             }
         }
     }
+    
+    void Die()
+    {
+        //go back to last checkpoint
+    }
+
+    public void DamageReciever(float damage)
+    {
+        health -= damage;
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+    
 
     //-------------------- UI & Pickups --------------------
     void UpdateUI() { }
