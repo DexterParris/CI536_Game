@@ -13,9 +13,11 @@ public class Enemy : MonoBehaviour
     public float attackRange = 2f;
     public GameObject deathParticles;
     public ParticleSystem impactParticle;
+    public Transform bloodTransform;
     private GameObject particles;
     private Transform playerPos;
     private PlayerMovement player;
+    private Animator eAnim;
     
     // Movement Variables
     [Header("Movement Variables")]
@@ -37,8 +39,10 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         player = GameObject.FindWithTag("Player").GetComponentInChildren<PlayerMovement>();
+        eAnim = gameObject.GetComponentInChildren<Animator>();
         target = player.transform;
         agent = GetComponent<NavMeshAgent>();
+        health = maxHealth;
     }
 
     // Update is called once per frame
@@ -84,6 +88,7 @@ public class Enemy : MonoBehaviour
     {
         if (attackCooldown <= 0f)
         {
+            eAnim.CrossFade("zombieAttack",0.2f);
             //Debug.Log("Attacking player for " + damage + " damage!");
             player.DamageReciever(damage);
             attackCooldown = attackCooldownTime;
@@ -97,16 +102,11 @@ public class Enemy : MonoBehaviour
     void Die(Transform hitPosition)
     {
         particles = Instantiate(deathParticles, transform.position + Vector3.down * 0.5f, Quaternion.identity);
-        particles.transform.parent = gameObject.transform;
+        particles.transform.parent = bloodTransform.transform;
         particles.transform.localPosition = Vector3.zero;
         
         Destroy(GetComponent<NavMeshAgent>());
-        //replace with death animation
-        rb.freezeRotation = false;
-        rb.constraints = RigidbodyConstraints.None;
-        rb.isKinematic = false;
-        rb.useGravity = true;
-        rb.AddForce(Vector3.forward*50f);
+        eAnim.CrossFade("zombieDying",0.2f);
         Destroy(gameObject, 2f);
         //replace with death animation
     }
