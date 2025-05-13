@@ -18,6 +18,8 @@ public class Enemy : MonoBehaviour
     private Transform playerPos;
     private PlayerMovement player;
     private Animator eAnim;
+    private float agentVelocity;
+    private bool isDying = false;
     
     // Movement Variables
     [Header("Movement Variables")]
@@ -49,6 +51,11 @@ public class Enemy : MonoBehaviour
     void Update()
     {
         UpdateParticles();
+        if (health > 0)
+        {
+            agentVelocity = agent.velocity.magnitude/agent.speed;
+        }
+        eAnim.SetFloat("walkSpeed", agentVelocity);
     }
 
     private void FixedUpdate()
@@ -70,15 +77,24 @@ public class Enemy : MonoBehaviour
     {
         if (health > 0 || agent != null)
         {
-            if (navUpdateTimer <= 0)
+            if (Vector3.Distance(transform.position, target.position) > stopRange)
             {
-                agent.destination = target.position;
-                navUpdateTimer = 3f;
+                eAnim.SetBool("isWalking", true);
+                if (navUpdateTimer <= 0)
+                {
+                    agent.destination = target.position;
+                    navUpdateTimer = 2f;
+                }
+                else
+                {
+                    navUpdateTimer -= Time.deltaTime;
+                }    
             }
             else
             {
-                navUpdateTimer -= Time.deltaTime;
-            }    
+                Attack();
+            }
+                
         }
         
     }
@@ -88,7 +104,7 @@ public class Enemy : MonoBehaviour
     {
         if (attackCooldown <= 0f)
         {
-            eAnim.CrossFade("zombieAttack",0.2f);
+            eAnim.CrossFade("ZombiePunch",0.1f);
             //Debug.Log("Attacking player for " + damage + " damage!");
             player.DamageReciever(damage);
             attackCooldown = attackCooldownTime;
@@ -101,14 +117,14 @@ public class Enemy : MonoBehaviour
 
     void Die(Transform hitPosition)
     {
+        isDying = true;
         particles = Instantiate(deathParticles, transform.position + Vector3.down * 0.5f, Quaternion.identity);
         particles.transform.parent = bloodTransform.transform;
         particles.transform.localPosition = Vector3.zero;
         
         Destroy(GetComponent<NavMeshAgent>());
-        eAnim.CrossFade("zombieDying",0.2f);
-        Destroy(gameObject, 2f);
-        //replace with death animation
+        eAnim.CrossFade("ZombieDying",0.1f);
+        Destroy(gameObject, 4f);
     }
 
     public void DamageReciever(float damage, Transform hitPosition)
@@ -116,7 +132,10 @@ public class Enemy : MonoBehaviour
         health -= damage;
         if (health <= 0)
         {
-            Die(hitPosition);
+            if (!isDying)
+            {
+                Die(hitPosition);
+            }
         }
     }
 

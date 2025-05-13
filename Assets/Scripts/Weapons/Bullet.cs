@@ -5,21 +5,30 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
+    private int currentFrame = 0;
+    public Vector3 targetPosition;
+    
     // Start is called before the first frame update
-    private void Awake()
+    private void Start()
     {
-        StartCoroutine(Kill());
+        Destroy(gameObject, 2f);
     }
 
     // Update is called once per frame
     void Update()
     {
-        transform.position += -transform.right * 1f;
+        if (currentFrame < 10)
+        {
+            currentFrame += 1;
+        }
+        else if (currentFrame == 10)
+        {
+            currentFrame += 1;
+            transform.position = targetPosition;
+            print(transform.position);
+        }
+        
     }
 
-    IEnumerator Kill()
-    {
-        yield return new WaitForSeconds(0.3f);
-        Destroy(gameObject);
-    }
+
 }

@@ -158,19 +158,29 @@ public class PlayerMovement : MonoBehaviour
                 RaycastHit hit;
                 if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 1000))
                 {
+                    print(hit.transform.tag);
                     if (hit.transform.CompareTag("Enemy"))
                     {
                         hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage, hit.transform);
-                        Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                        Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point,
+                            Quaternion.LookRotation(hit.normal));
+                    }
+                    else if (hit.transform.CompareTag(("EnemyHead")))
+                    {
+                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage * 10, hit.transform);
+                        Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point,
+                            Quaternion.LookRotation(hit.normal));
                     }
                     else
                     {
                         Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
                     }
                 }
-
-                GameObject bullet = Instantiate(weapon.bulletModel, weapon.firingPoint.position, Quaternion.LookRotation(hit.point - weapon.firingPoint.position));
-                bullet.transform.localRotation = Quaternion.Euler(0, 90, 0);
+                
+                GameObject bullet = Instantiate(weapon.bulletModel, weapon.firingPoint.position,
+                    quaternion.identity);
+                bullet.GetComponent<Bullet>().targetPosition = hit.point; 
+                
             }
             else
             {
