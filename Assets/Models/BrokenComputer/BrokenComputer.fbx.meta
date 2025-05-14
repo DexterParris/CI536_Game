@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: ef9705cce7c35094a896603bc1b479cc
+=======
+guid: d08525b87a0b3c24c8504d33f9d0b874
+>>>>>>> Jude
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
