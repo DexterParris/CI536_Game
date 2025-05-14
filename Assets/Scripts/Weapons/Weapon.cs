@@ -15,8 +15,14 @@ public class Weapon : MonoBehaviour
     public Transform firingPoint;
     private bool isPickedUp = false;
     public GameObject bulletModel;
-    
-    
+    public SoundTrigger shootSoundTrigger;
+    public SoundTrigger pickupSoundTrigger;
+    public SoundTrigger reloadSoundTrigger;
+    public SoundTrigger emptySoundTrigger;
+
+    private void Start()
+    {
+    }
 
     private void Update()
     {

@@ -155,19 +155,23 @@ public class PlayerMovement : MonoBehaviour
             {
                 weapon.clipAmmo--;
                 PlayShootAnim();
+
+                GameObject bullet = Instantiate(weapon.bulletModel, weapon.firingPoint.position,
+                    quaternion.identity);
+
                 RaycastHit hit;
                 if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 1000))
                 {
                     print(hit.transform.tag);
                     if (hit.transform.CompareTag("Enemy"))
                     {
-                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage, hit.transform);
+                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage);
                         Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point,
                             Quaternion.LookRotation(hit.normal));
                     }
                     else if (hit.transform.CompareTag(("EnemyHead")))
                     {
-                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage * 10, hit.transform);
+                        hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage * 10);
                         Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point,
                             Quaternion.LookRotation(hit.normal));
                     }
@@ -175,17 +179,22 @@ public class PlayerMovement : MonoBehaviour
                     {
                         Instantiate(weapon.impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
                     }
+                    bullet.GetComponent<Bullet>().targetPosition = hit.point;
                 }
-                
-                GameObject bullet = Instantiate(weapon.bulletModel, weapon.firingPoint.position,
-                    quaternion.identity);
-                bullet.GetComponent<Bullet>().targetPosition = hit.point; 
-                
+                else
+                {
+                    bullet.GetComponent<Bullet>().targetPosition = cameraTrans.position + cameraTrans.forward * 50f;
+                }
+
             }
             else
             {
                 PlayShootBlankAnim();
             }
+        }
+        else if (Input.GetKeyDown(KeyCode.Mouse0) && ammo <= 0)
+        {
+            PlayShootBlankAnim();
         }
     }
 
@@ -228,20 +237,17 @@ public class PlayerMovement : MonoBehaviour
                 hit.transform.GetComponent<Enemy>()?.KickReciever(hit.transform);
                 Instantiate(hit.transform.GetComponent<Enemy>().impactParticle, hit.point, Quaternion.LookRotation(hit.normal));
             }
-            else if (hit.transform.CompareTag("Door"))
-            {
-                PlayPickupAnim();
-            }
+
 
             Rigidbody rb = hit.transform.GetComponent<Rigidbody>();
             if (rb != null)
             {
                 Vector3 dir = (hit.transform.position - transform.position).normalized;
-                rb.AddForce(dir * 5000f *Time.deltaTime, ForceMode.Impulse);
+                rb.AddForce(dir * 5000f * Time.deltaTime, ForceMode.Impulse);
             }
         }
     }
-    
+
     void Die()
     {
         //go back to last checkpoint
@@ -255,16 +261,36 @@ public class PlayerMovement : MonoBehaviour
             Die();
         }
     }
-    
+
 
     //-------------------- UI & Pickups --------------------
     void UpdateUI() { }
 
-    void PlayReloadAnim() => weaponAnim.Play("Reload");
-    void PlayShootAnim() => weaponAnim.Play("Shoot");
-    void PlayShootBlankAnim() => weaponAnim.Play("ShootBlank");
-    void PlayPickupAnim() => weaponAnim.Play("PickUp");
-    void PlayKickAnim() => legAnim.Play("Kick");
+    void PlayReloadAnim()
+    {
+        weaponAnim.CrossFade("Reload", 0.1f);
+        if (weapon.reloadSoundTrigger != null)
+            weapon.reloadSoundTrigger.TriggerSounds();
+    }
+    void PlayShootAnim()
+    {
+        weaponAnim.CrossFade("Shoot", 0.1f);
+        if (weapon.shootSoundTrigger != null)
+            weapon.shootSoundTrigger.TriggerSounds();
+    }
+    void PlayShootBlankAnim()
+    {
+        weaponAnim.CrossFade("ShootBlank", 0.1f);
+        if (weapon.emptySoundTrigger != null)
+            weapon.emptySoundTrigger.TriggerSounds();
+    }
+    void PlayPickupAnim()
+    {
+        weaponAnim.CrossFade("PickUp", 0.1f);
+        if (weapon.pickupSoundTrigger != null)
+            weapon.pickupSoundTrigger.TriggerSounds();
+    }
+    void PlayKickAnim() => legAnim.CrossFade("Kick", 0.1f);
 
     public void PickupAmmo(int amount)
     {

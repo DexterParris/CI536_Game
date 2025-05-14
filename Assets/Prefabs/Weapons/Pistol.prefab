@@ -12,6 +12,10 @@ GameObject:
   - component: {fileID: 692551486870732113}
   - component: {fileID: 261151764382708028}
   - component: {fileID: 9066132423718968269}
+  - component: {fileID: -1691906424780406398}
+  - component: {fileID: 568374094256936939}
+  - component: {fileID: 36252349642324423}
+  - component: {fileID: 670862099676850615}
   m_Layer: 0
   m_Name: Pistol
   m_TagString: Untagged
@@ -58,6 +62,10 @@ MonoBehaviour:
   firingPoint: {fileID: 6162249333684837731}
   bulletModel: {fileID: 45432162866604295, guid: d27c3e3cc6ac9d5489ceda68ea6b871b,
     type: 3}
+  shootSoundTrigger: {fileID: -1691906424780406398}
+  pickupSoundTrigger: {fileID: 670862099676850615}
+  reloadSoundTrigger: {fileID: 568374094256936939}
+  emptySoundTrigger: {fileID: 36252349642324423}
 --- !u!54 &261151764382708028
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -106,6 +114,69 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 3.02
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-1691906424780406398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7349291657610529846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576a2e6263839814296f206992bce3d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  triggerName: Gunshots
+  audioClips:
+  - {fileID: 8300000, guid: 87d3160cc65546849baeec7373847d48, type: 3}
+  - {fileID: 8300000, guid: 0f9638c1f00b9b540aecb004eb7e4df6, type: 3}
+  - {fileID: 8300000, guid: abbc9e034fafc814a84fcf39cc01e2bc, type: 3}
+  - {fileID: 8300000, guid: a7df91415ccf705488f932a307c0fff4, type: 3}
+--- !u!114 &568374094256936939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7349291657610529846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576a2e6263839814296f206992bce3d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  triggerName: Reload
+  audioClips:
+  - {fileID: 8300000, guid: ca62290d722c4ff42bdc91a0dc484ef7, type: 3}
+--- !u!114 &36252349642324423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7349291657610529846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576a2e6263839814296f206992bce3d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  triggerName: Empty Fire
+  audioClips:
+  - {fileID: 8300000, guid: 6e90b24f661bc8241b19c9ba3a4ecedf, type: 3}
+--- !u!114 &670862099676850615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7349291657610529846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576a2e6263839814296f206992bce3d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  triggerName: Pickup
+  audioClips:
+  - {fileID: 8300000, guid: 8853cbb3d1d667044a18e32e2d7e88fe, type: 3}
 --- !u!1 &7532021192055609488
 GameObject:
   m_ObjectHideFlags: 0
