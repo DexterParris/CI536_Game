@@ -270,6 +270,7 @@ public class PlayerMovement : MonoBehaviour
         ammo = maxAmmo;
 
         if(weapon != null) weapon.clipAmmo = weapon.maxClipAmmo;
+        deathScreen.alpha = 0;
 
         isDying = false;
     }
@@ -281,9 +282,13 @@ public class PlayerMovement : MonoBehaviour
         // Slow down the game
         Time.timeScale = 0.1f;
 
-        deathScreen.alpha = Mathf.Lerp(deathScreen.alpha, 1f, Time.deltaTime * 0.2f);
+        while (deathScreen.alpha < 1)
+        {
+            deathScreen.alpha += 0.005f;
+            yield return new WaitForSeconds(0.0005f);
+        }
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.2f);
         Respawn();
     }
 
