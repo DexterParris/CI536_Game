@@ -27,9 +27,6 @@ public class ElevatorDoorScript : MonoBehaviour
                         StartCoroutine(changeScene());
                     }
                     break;
-                default:
-                    elevatorScript.CloseDoor();
-                    break;
             }
 
         }

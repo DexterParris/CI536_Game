@@ -136,6 +136,7 @@ public class Enemy : MonoBehaviour
         particles.transform.localPosition = Vector3.zero;
         
         Destroy(GetComponent<NavMeshAgent>());
+        Destroy(GetComponent<CapsuleCollider>());
         eAnim.CrossFade("ZombieDying",0.1f);
         Destroy(gameObject, 4f);
     }

@@ -20,9 +20,6 @@ public class Weapon : MonoBehaviour
     public SoundTrigger reloadSoundTrigger;
     public SoundTrigger emptySoundTrigger;
 
-    private void Start()
-    {
-    }
 
     private void Update()
     {
