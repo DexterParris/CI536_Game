@@ -1,5 +1,8 @@
+using System.Collections;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -8,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
     public float health = 100f;
     public float maxHealth = 100f;
     public CharacterController characterController;
+    bool isDying = false;
 
     // Camera Variables
     public Transform cameraTrans;
@@ -26,6 +30,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float bHopMaxBoost = 5f;
     [SerializeField] private float bHopBoost = 0f;
     [SerializeField] private float bHopTimer = 0f;
+    public Transform lastCheckpoint;
+    
+
+    // UI
+    [Header("UI Variables")]
+    public UnityEngine.UI.Slider healthBar;
+    public UnityEngine.UI.Slider ammoBar;
+    public CanvasGroup deathScreen;
 
     // Gravity
     private float gravity = -9.81f;
@@ -46,8 +58,9 @@ public class PlayerMovement : MonoBehaviour
         ammo = maxAmmo;
         weaponAnim = weaponSlot.GetComponent<Animator>();
         legAnim = legObject.GetComponent<Animator>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
+        UnityEngine.Cursor.visible = false;
+        lastCheckpoint = transform;
     }
 
     void Update()
@@ -162,7 +175,6 @@ public class PlayerMovement : MonoBehaviour
                 RaycastHit hit;
                 if (Physics.Raycast(cameraTrans.position, cameraTrans.forward, out hit, 1000))
                 {
-                    print(hit.transform.tag);
                     if (hit.transform.CompareTag("Enemy"))
                     {
                         hit.transform.GetComponent<Enemy>()?.DamageReciever(weapon.bulletDamage);
@@ -248,23 +260,74 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void Die()
+    void Respawn()
     {
-        //go back to last checkpoint
+        Time.timeScale = 1f;
+        transform.position = lastCheckpoint.position;
+        transform.rotation = lastCheckpoint.rotation;
+
+        health = maxHealth;
+        ammo = maxAmmo;
+
+        if(weapon != null) weapon.clipAmmo = weapon.maxClipAmmo;
+        deathScreen.alpha = 0;
+
+        isDying = false;
     }
+
+    IEnumerator Die()
+    {
+        print("You Died!");
+
+        // Slow down the game
+        Time.timeScale = 0.1f;
+
+        while (deathScreen.alpha < 1)
+        {
+            deathScreen.alpha += 0.005f;
+            yield return new WaitForSeconds(0.0005f);
+        }
+
+        yield return new WaitForSeconds(0.2f);
+        Respawn();
+    }
+
+    
 
     public void DamageReciever(float damage)
     {
         health -= damage;
         if (health <= 0)
         {
-            Die();
+            if(!isDying)
+            {
+                isDying = true;
+                StartCoroutine(Die());
+
+            }
         }
     }
 
 
     //-------------------- UI & Pickups --------------------
-    void UpdateUI() { }
+    void UpdateUI() 
+    { 
+        healthBar.value = health / maxHealth;
+
+        if (weapon == null)
+        {
+            ammoBar.value = 0;
+        }
+        else
+        {
+            if (weapon.clipAmmo == 0)
+                ammoBar.value = 0;
+            else
+                ammoBar.value = (float)weapon.clipAmmo / (float)weapon.maxClipAmmo;
+        }
+
+    }
+
 
     void PlayReloadAnim()
     {

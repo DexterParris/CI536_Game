@@ -42,7 +42,7 @@ public class Enemy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        player = GameObject.FindWithTag("Player").GetComponentInChildren<PlayerMovement>();
+        player = GameObject.Find("Player").GetComponent<PlayerMovement>();
         eAnim = gameObject.GetComponentInChildren<Animator>();
         target = player.transform;
         agent = GetComponent<NavMeshAgent>();
@@ -136,6 +136,7 @@ public class Enemy : MonoBehaviour
         particles.transform.localPosition = Vector3.zero;
         
         Destroy(GetComponent<NavMeshAgent>());
+        Destroy(GetComponent<CapsuleCollider>());
         eAnim.CrossFade("ZombieDying",0.1f);
         Destroy(gameObject, 4f);
     }

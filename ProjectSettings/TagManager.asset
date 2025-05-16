@@ -4,17 +4,16 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Enemy
-  - Door
   - EnemyHead
+  - Enemy
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - IgnorePlayer
   - Water
   - UI
-  - 
+  - Player
   - 
   - 
   - 
@@ -43,4 +42,7 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: UI
+    uniqueID: 3183041841
     locked: 0
