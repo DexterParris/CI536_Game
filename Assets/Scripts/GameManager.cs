@@ -6,7 +6,9 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
 
-    public Transform playerPos;
+    public Vector3 playerPosition;
+    public Vector3 playerRotation;
+
 
     public static GameManager Instance;
 
@@ -21,5 +23,21 @@ public class GameManager : MonoBehaviour
             Instance = this; 
             DontDestroyOnLoad(gameObject);
         } 
+    }
+
+    public void storePlayerLocation(Vector3 playerPosition, Vector3 playerRotation)
+    {
+        this.playerPosition = playerPosition;
+        this.playerRotation = playerRotation;
+    }
+
+    public Vector3 LoadPlayerPos()
+    {
+        return playerPosition;
+    }
+
+    public Vector3 LoadPlayerRot()
+    {
+        return playerRotation;
     }
 }
